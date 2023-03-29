@@ -1,61 +1,88 @@
+
 import './App.css';
-import { useState } from 'react'; //state를 사용하기 위해선 작성해줘야하는 훅 
-function Create(props)
-{
+import {useState} from 'react';
+
+function Article(props){
+  return <article>
+    <h2>{props.title}</h2>
+    {props.body}
+  </article>
+}
+function Header(props){
+  return <header>
+    <h1><a href="/" onClick={(event)=>{
+      event.preventDefault();
+      props.onChangeMode();
+    }}>{props.title}</a></h1>
+  </header>
+}
+function Nav(props){
+  const lis = []
+  for(let i=0; i<props.topics.length; i++){
+    let t = props.topics[i];
+    lis.push(<li key={t.id}>
+      <a id={t.id} href={'/read/'+t.id} onClick={event=>{
+        event.preventDefault();
+        props.onChangeMode(Number(event.target.id));
+      }}>{t.title}</a>
+    </li>)
+  }
+  return <nav>
+    <ol>
+      {lis}
+    </ol>
+  </nav>
+}
+function Create(props){
   return <article>
     <h2>Create</h2>
-    <form onSubmit={event=>{event.preventDefault(); const title = event.target; const body = event.target.body.value; props.onCreate(title,body)}}>   
-    <p><input type = "text" name ="title" placeholder='title'></input></p>
-    <p><textarea name='body' placeholder='body'></textarea></p>
-    <p><input type = "submit" value="create"></input></p>
+    <form onSubmit={event=>{
+      event.preventDefault();
+      const title = event.target.title.value;
+      const body = event.target.body.value;
+      props.onCreate(title, body);
+    }}>
+      <p><input type="text" name="title" placeholder="title"/></p>
+      <p><textarea name="body" placeholder="body"></textarea></p>
+      <p><input type="submit" value="Create"></input></p>
     </form>
   </article>
 }
-function Header(props) // 컴포넌트 생성방법 _대문자를 사용해서 작성해야함 
-  {
-        return <header>
-          <h1><a href='/' onClick={function(event){event.preventDefault();props.onChangeMode();}}>{props.title}</a></h1>
-        </header>
-  }
-  function Artice(props) // props 사용법
-  {
-    return <artice>
-    <h2>{props.title}</h2>
-    </artice>
-  }
-  function Nav(props){
-    const lis = []
-    for(let i=0; i<props.topics.length; i++){
-      let t = props.topics[i];
-      lis.push(<li key={t.id} >
-        <a id={t.id} href={'/read/'+t.id} onClick={function(event){event.preventDefault(); props.onChangeMode(Number(event.target.id));}}> {t.title} </a>
-      </li>)
-    }
-    return <nav>
-      <ol>
-        {lis}
-      </ol>
-    </nav>
-  }
-
+function Update(props){
+  const [title, setTitle] = useState(props.title);
+  const [body, setBody] = useState(props.body);
+  return <article>
+    <h2>Update</h2>
+    <form onSubmit={event=>{
+      event.preventDefault();
+      const title = event.target.title.value;
+      const body = event.target.body.value;
+      props.onUpdate(title, body);
+    }}>
+      <p><input type="text" name="title" placeholder="title" value={title} onChange={event=>{
+        setTitle(event.target.value);
+      }}/></p>
+      <p><textarea name="body" placeholder="body" value={body} onChange={event=>{
+        setBody(event.target.value);
+      }}></textarea></p>
+      <p><input type="submit" value="Update"></input></p>
+    </form>
+  </article>
+}// 업데이트하는 함수 
 function App() {
-  /* const _mode = useState("WELCOME"); // state 초기값 
-  const mode = _mode[0] // mode0 기본값 
-  const setmode = _mode[1]  //mode1 변경값  */
-  const [Mode, setmode] =useState('WELCOME'); // usestate를 사용함으로서 상태로 만듬
-  const [id, setid] =useState(null); 
-  const [nextID, setNextID] =useState(4);
+  const [mode, setMode] = useState('WELCOME');
+  const [id, setId] = useState(null);
+  const [nextId, setNextId] = useState(4);
+  const [topics, setTopics] = useState([
+    {id:1, title:'html', body:'html is ...'},
+    {id:2, title:'css', body:'css is ...'},
+    {id:3, title:'javascript', body:'javascript is ...'}
+  ]);
   let content = null;
-  const [topics,setTopics] = useState( [
-    {id:1, title : "Html",body:"html is ...."},
-    {id:2, title : "Css",body:"css is ...."},
-    {id:3, title : "Js",body:"JavaScript is ...."}
-  ]);// 목차들을 저장하기위한 배열생성 
-  if(Mode === 'WELCOME')
-  {
-   content = <Artice title ="Welcome" body  ="Hello WEB"></Artice>
-  } 
-  else if(Mode === 'READ'){
+  let contextControl = null; // 맥락적으로 노출되는 ui mode READ일시만 나타남
+  if(mode === 'WELCOME'){
+    content = <Article title="Welcome" body="Hello, WEB"></Article>
+  } else if(mode === 'READ'){
     let title, body = null;
     for(let i=0; i<topics.length; i++){
       if(topics[i].id === id){
@@ -63,26 +90,70 @@ function App() {
         body = topics[i].body;
       }
     }
-    content = <Artice title={title} body={body}></Artice>
-  } 
-  else if (Mode==='CREATE')
-  {
-    content = <Create onCreate={(_title,_body)=>{
-      const newTopic = {id:nextID,title:_title, body:_body}
+    content = <Article title={title} body={body}></Article>
+    contextControl =<>
+      <li><a href={'/update/'+id} onClick={event=>{
+        event.preventDefault();
+        setMode('UPDATE');
+      }}>Update</a></li>
+      <li><input type="button" value="Delete" onClick={()=>{
+        const newTopics = []
+        for(let i=0; i<topics.length; i++){
+          if(topics[i].id !== id){
+            newTopics.push(topics[i]);
+          }
+        } // delete는 페이지를 로딩할 필요가없어서 버튼으로 컨트롤 
+        setTopics(newTopics);
+        setMode('WELCOME');
+      }} /></li>      </> // 복수의 태그를 그룹핑 하는 빈태그 
+ 
+  } else if(mode === 'CREATE'){
+    content = <Create onCreate={(_title, _body)=>{
+      const newTopic = {id:nextId, title:_title, body:_body}
       const newTopics = [...topics]
       newTopics.push(newTopic);
-      topics.push(newTopic);
       setTopics(newTopics);
+      setMode('READ');
+      setId(nextId);
+      setNextId(nextId+1);
     }}></Create>
+  } else if(mode === 'UPDATE'){
+    let title, body = null;
+    for(let i=0; i<topics.length; i++){
+      if(topics[i].id === id){
+        title = topics[i].title;
+        body = topics[i].body;
+      }
+    }
+    content = <Update title={title} body={body} onUpdate={(title, body)=>{
+      console.log(title, body);
+      const newTopics = [...topics]
+      const updatedTopic = {id:id, title:title, body:body}
+      for(let i=0; i<newTopics.length; i++){
+        if(newTopics[i].id === id){
+          newTopics[i] = updatedTopic;
+          break;
+        }
+      }
+      setTopics(newTopics);
+      setMode('READ');
+    }}></Update>
   }
-
   return (
-    <div className="App">
-     <Header title="남정욱" onChangeMode={function(){setmode('WELCOME');}}></Header>{/*  함수를 등록시키기 위해 작성 */}
-     <Nav topics={topics} onChangeMode={function(id){setmode("READ"); setid(id) }}></Nav>
-    {content}
-    <a href = "/create"onClick={event=>{event.preventDefault(); setmode('CREATE');}}>create</a> 
-    </div>//props안에 값 전달법 
+    <div>
+      <Header title="WEB" onChangeMode={()=>{
+        setMode('WELCOME');
+      }}></Header>
+      <Nav topics={topics} onChangeMode={(_id)=>{
+        setMode('READ');
+        setId(_id);
+      }}></Nav>
+      {content}
+      <ul>
+        <li><a href="/create" onClick={event=>{event.preventDefault();setMode('CREATE');}}>Create</a></li>
+        {contextControl}
+      </ul>
+    </div>
   );
 }
 
