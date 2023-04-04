@@ -1,4 +1,3 @@
-
 import './App.css';
 import {useState} from 'react';
 
@@ -91,7 +90,8 @@ function App() {
       }
     }
     content = <Article title={title} body={body}></Article>
-    contextControl =<>
+    contextControl =
+    <>
       <li><a href={'/update/'+id} onClick={event=>{
         event.preventDefault();
         setMode('UPDATE');
@@ -105,7 +105,8 @@ function App() {
         } // delete는 페이지를 로딩할 필요가없어서 버튼으로 컨트롤 
         setTopics(newTopics);
         setMode('WELCOME');
-      }} /></li>      </> // 복수의 태그를 그룹핑 하는 빈태그 
+      }} /></li>     
+      </> // 복수의 태그를 그룹핑 하는 빈태그 
  
   } else if(mode === 'CREATE'){
     content = <Create onCreate={(_title, _body)=>{
@@ -160,4 +161,4 @@ function App() {
 export default App;
 // 상태를 만들떄 원시데이터(string number boolean ) / 범 객체(object ,array)의 처리방법은 달라져야함
 // 범객체는 벨류를 복재해서 새로운 데이터를 뉴벨루로 해야함
-// 즉 복제본 데이터를 생성한뒤에 호출해야한다는 것 
+// 즉 복제본 데이터를 생성한뒤에 호출해야한다는 것
